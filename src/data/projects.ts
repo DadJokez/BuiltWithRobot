@@ -14,7 +14,7 @@ export const projects: Project[] = [
     description:
       "A dad joke generator that delivers groan-worthy puns on demand. Built for laughs, powered by AI.",
     tags: ["Next.js", "AI", "Fun"],
-    url: "https://dadjokez.com",
+    url: "https://hello-kappa-khaki.vercel.app/",
     date: "2026-04",
   },
 ];
