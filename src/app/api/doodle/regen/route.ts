@@ -107,7 +107,7 @@ async function generateImage(ai: GoogleGenAI, prompt: string): Promise<Buffer> {
   throw new Error("No image data returned from Gemini");
 }
 
-async function run(req: Request, opts: { force?: boolean } = {}) {
+async function run(req: Request, opts: { force?: boolean; monthOverride?: number } = {}) {
   if (!authorized(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
@@ -123,7 +123,7 @@ async function run(req: Request, opts: { force?: boolean } = {}) {
   }
 
   const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
-  const month = new Date(`${date}T00:00:00Z`).getUTCMonth() + 1;
+  const month = opts.monthOverride ?? new Date(`${date}T00:00:00Z`).getUTCMonth() + 1;
 
   const activity = await pickActivity(ai, month, date);
   const titleStyle = pickTitleStyle(date);
@@ -164,7 +164,7 @@ async function run(req: Request, opts: { force?: boolean } = {}) {
   return NextResponse.json({ ok: true, entry });
 }
 
-async function handle(req: Request, opts: { force?: boolean } = {}) {
+async function handle(req: Request, opts: { force?: boolean; monthOverride?: number } = {}) {
   try {
     return await run(req, opts);
   } catch (err) {
@@ -180,8 +180,15 @@ export async function GET(req: Request) {
   return handle(req);
 }
 
-// Manual regen (e.g., to backfill): POST with ?force=1
+// Manual regen (e.g., to backfill): POST with ?force=1&month=N
 export async function POST(req: Request) {
   const url = new URL(req.url);
-  return handle(req, { force: url.searchParams.get("force") === "1" });
+  const monthRaw = url.searchParams.get("month");
+  const monthNum = monthRaw ? parseInt(monthRaw, 10) : NaN;
+  const monthOverride =
+    Number.isInteger(monthNum) && monthNum >= 1 && monthNum <= 12 ? monthNum : undefined;
+  return handle(req, {
+    force: url.searchParams.get("force") === "1",
+    monthOverride,
+  });
 }
