@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { put } from "@vercel/blob";
 import { GoogleGenAI } from "@google/genai";
 import {
@@ -142,6 +143,10 @@ async function run(req: Request, opts: { force?: boolean } = {}) {
     ),
   };
   await saveManifest(next);
+
+  // Invalidate cached pages so the new doodle appears immediately.
+  revalidatePath("/");
+  revalidatePath("/doodle");
 
   return NextResponse.json({ ok: true, entry });
 }
