@@ -31,7 +31,7 @@ export const MONTH_THEMES: Record<number, { vibe: string; examples: string[] }> 
   12: { vibe: "winter holidays, light, wonder", examples: ["decorating a tree", "caroling in the snow", "wrapping a gift", "lighting candles"] },
 };
 
-const STYLE_PROMPT = `A 1950s retro-futurist illustration in the style of Disney's Tomorrowland concept art. A friendly chrome robot and a human $ACTIVITY together. Atomic-age aesthetic, muted palette of teal, coral, cream, and brass. Soft gouache texture, optimistic mid-century mood, centered composition, square format, clean background with subtle starbursts or geometric flourishes. No text, no letters, no watermarks.`;
+const STYLE_PROMPT = `A 1950s retro-futurist illustration in the style of Disney's Tomorrowland concept art, designed as a wide horizontal banner (16:9 aspect ratio, like a Google Doodle). A friendly chrome robot and a human $ACTIVITY together. Atomic-age aesthetic, muted palette of teal, coral, cream, and brass. Soft gouache texture, optimistic mid-century mood, horizontally composed with action spread across the frame, clean background with subtle starbursts or geometric flourishes. No text, no letters, no watermarks.`;
 
 export function buildImagePrompt(activity: string): string {
   return STYLE_PROMPT.replace("$ACTIVITY", activity);

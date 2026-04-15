@@ -41,14 +41,14 @@ export default async function DoodleArchive() {
         {entries.length === 0 ? (
           <p className="text-white/40">No doodles yet. Check back tomorrow.</p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2">
             {entries.map((entry) => (
               <figure key={entry.date} className="flex flex-col">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={entry.imageUrl}
                   alt={entry.title}
-                  className="aspect-square w-full rounded-lg border border-white/[0.06] object-cover"
+                  className="aspect-video w-full rounded-lg border border-white/[0.06] object-cover"
                 />
                 <figcaption className="mt-3">
                   <div className="text-sm font-medium text-white/80">{entry.title}</div>

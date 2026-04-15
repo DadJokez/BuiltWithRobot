@@ -28,14 +28,12 @@ export default async function DailyDoodle() {
       className="group mb-16 block"
       aria-label={`Daily doodle: ${latest.title}. View archive.`}
     >
-      <div className="mx-auto flex max-w-xs flex-col items-center">
+      <div className="mx-auto flex w-full max-w-2xl flex-col items-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={latest.imageUrl}
           alt={latest.title}
-          width={320}
-          height={320}
-          className="aspect-square w-full rounded-lg border border-white/[0.06] object-cover transition group-hover:border-white/20"
+          className="aspect-video w-full rounded-lg border border-white/[0.06] object-cover transition group-hover:border-white/20"
         />
         <div className="mt-3 text-center">
           <div className="text-sm font-medium text-white/80">{latest.title}</div>

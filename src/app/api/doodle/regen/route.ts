@@ -92,6 +92,9 @@ async function generateImage(ai: GoogleGenAI, prompt: string): Promise<Buffer> {
     ai.models.generateContent({
       model: IMAGE_MODEL,
       contents: prompt,
+      config: {
+        imageConfig: { aspectRatio: "16:9" },
+      },
     }),
   );
   const parts = res.candidates?.[0]?.content?.parts ?? [];
@@ -129,11 +132,12 @@ async function run(req: Request, opts: { force?: boolean } = {}) {
     generateImage(ai, buildImagePrompt(activity)),
   ]);
 
+  // addRandomSuffix keeps each regen on a unique URL so CDN caches can't
+  // serve yesterday's bytes at today's path.
   const { url } = await put(`doodle/${date}.png`, imageBytes, {
     access: "public",
     contentType: "image/png",
-    addRandomSuffix: false,
-    allowOverwrite: true,
+    addRandomSuffix: true,
   });
 
   const entry: DoodleEntry = { date, title, activity, imageUrl: url, titleStyle };
