@@ -1,10 +1,16 @@
+import DailyDoodle from "@/components/DailyDoodle";
 import ProjectCard from "@/components/ProjectCard";
 import { projects } from "@/data/projects";
+
+export const revalidate = 3600;
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-24 sm:px-8">
+        {/* Daily Doodle */}
+        <DailyDoodle />
+
         {/* Hero */}
         <div className="mb-20">
           <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">

@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/doodle/regen", "schedule": "0 12 * * *" }
+  ]
+}
