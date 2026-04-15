@@ -36,7 +36,7 @@ export default async function DoodleArchive() {
           </Link>
           <h1 className="mb-3 text-4xl font-bold tracking-tight">Doodle Archive</h1>
           <p className="max-w-lg text-lg text-white/50">
-            A daily retro-futurist illustration. One human, one robot, one mundane task.
+            A daily retro-futurist illustration. One human, one robot, one mundane task — and one narrow escape.
           </p>
         </div>
 
@@ -57,6 +57,13 @@ export default async function DoodleArchive() {
                   <div className="mt-1 text-xs uppercase tracking-widest text-white/30">
                     {formatDate(entry.date)}
                   </div>
+                  {entry.darkMechanism && entry.luckyEscape && (
+                    <div className="mt-3 border-t border-white/[0.06] pt-3">
+                      <div className="text-xs text-white/25 italic leading-relaxed">
+                        What&apos;s really happening: {entry.darkMechanism} — but {entry.luckyEscape}.
+                      </div>
+                    </div>
+                  )}
                 </figcaption>
               </figure>
             ))}
