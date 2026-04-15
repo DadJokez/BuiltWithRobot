@@ -20,6 +20,33 @@ export const dynamic = "force-dynamic";
 const IMAGE_MODEL = process.env.GEMINI_IMAGE_MODEL ?? "gemini-3-pro-image-preview";
 const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL ?? "gemini-2.5-flash";
 
+function isRetryable(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  if (status === 429 || status === 500 || status === 502 || status === 503 || status === 504) {
+    return true;
+  }
+  const msg = String((err as { message?: string })?.message ?? "");
+  return /UNAVAILABLE|overloaded|rate limit|temporarily/i.test(msg);
+}
+
+async function withRetry<T>(label: string, fn: () => Promise<T>, attempts = 5): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (!isRetryable(err) || i === attempts - 1) throw err;
+      // Exponential backoff with jitter: 2s, 4s, 8s, 16s
+      const base = 2000 * 2 ** i;
+      const delay = base + Math.floor(Math.random() * 1000);
+      console.warn(`[doodle] ${label} attempt ${i + 1} failed (${(err as { status?: number })?.status ?? "?"}), retrying in ${delay}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastErr;
+}
+
 function authorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
@@ -29,14 +56,16 @@ function authorized(req: Request): boolean {
 
 async function pickActivity(ai: GoogleGenAI, month: number, date: string): Promise<string> {
   const theme = MONTH_THEMES[month];
-  const res = await ai.models.generateContent({
-    model: TEXT_MODEL,
-    contents: `You are picking a subject for today's daily illustration (date: ${date}).
+  const res = await withRetry("pickActivity", () =>
+    ai.models.generateContent({
+      model: TEXT_MODEL,
+      contents: `You are picking a subject for today's daily illustration (date: ${date}).
 The month's vibe is: ${theme.vibe}.
 Some example activities in this vibe: ${theme.examples.join(", ")}.
 
 Pick ONE activity — it should be a gerund phrase like the examples ("planting seedlings", "flying a kite"). It can be one of the examples or a fresh variation in the same vibe. It must be something a friendly chrome robot and a human could plausibly do together in a 1950s retro-futurist illustration. Return only the gerund phrase, no punctuation, no quotes.`,
-  });
+    }),
+  );
   const text = res.text?.trim() ?? theme.examples[0];
   return text.replace(/^["']|["']$/g, "").toLowerCase();
 }
@@ -46,20 +75,24 @@ async function generateTitle(
   activity: string,
   style: "plaque" | "textbook",
 ): Promise<string> {
-  const res = await ai.models.generateContent({
-    model: TEXT_MODEL,
-    contents: `Scene: a friendly chrome robot and a human ${activity} together in a 1950s retro-futurist style.
+  const res = await withRetry("generateTitle", () =>
+    ai.models.generateContent({
+      model: TEXT_MODEL,
+      contents: `Scene: a friendly chrome robot and a human ${activity} together in a 1950s retro-futurist style.
 
 ${titleStyleInstruction(style)}`,
-  });
+    }),
+  );
   return (res.text ?? "Untitled Procedure").trim().replace(/^["']|["']$/g, "");
 }
 
 async function generateImage(ai: GoogleGenAI, prompt: string): Promise<Buffer> {
-  const res = await ai.models.generateContent({
-    model: IMAGE_MODEL,
-    contents: prompt,
-  });
+  const res = await withRetry("generateImage", () =>
+    ai.models.generateContent({
+      model: IMAGE_MODEL,
+      contents: prompt,
+    }),
+  );
   const parts = res.candidates?.[0]?.content?.parts ?? [];
   for (const part of parts) {
     const inline = part.inlineData;
@@ -113,13 +146,24 @@ async function run(req: Request, opts: { force?: boolean } = {}) {
   return NextResponse.json({ ok: true, entry });
 }
 
+async function handle(req: Request, opts: { force?: boolean } = {}) {
+  try {
+    return await run(req, opts);
+  } catch (err) {
+    const status = (err as { status?: number })?.status ?? 500;
+    const message = (err as { message?: string })?.message ?? "unknown error";
+    console.error("[doodle] regen failed", err);
+    return NextResponse.json({ error: message, upstreamStatus: status }, { status: 500 });
+  }
+}
+
 // Vercel Cron calls GET with the CRON_SECRET Authorization header.
 export async function GET(req: Request) {
-  return run(req);
+  return handle(req);
 }
 
 // Manual regen (e.g., to backfill): POST with ?force=1
 export async function POST(req: Request) {
   const url = new URL(req.url);
-  return run(req, { force: url.searchParams.get("force") === "1" });
+  return handle(req, { force: url.searchParams.get("force") === "1" });
 }
