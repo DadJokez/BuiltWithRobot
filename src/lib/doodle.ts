@@ -1,6 +1,10 @@
 import { list, put } from "@vercel/blob";
 
 export type DoodleEntry = {
+  // id/createdAt added in the append-always refactor; optional so
+  // legacy manifest rows still parse.
+  id?: string;
+  createdAt?: string;
   date: string; // YYYY-MM-DD
   title: string;
   activity: string;

@@ -140,10 +140,19 @@ async function run(req: Request, opts: { force?: boolean } = {}) {
     addRandomSuffix: true,
   });
 
-  const entry: DoodleEntry = { date, title, activity, imageUrl: url, titleStyle };
+  const createdAt = new Date().toISOString();
+  const entry: DoodleEntry = {
+    id: createdAt,
+    date,
+    createdAt,
+    title,
+    activity,
+    imageUrl: url,
+    titleStyle,
+  };
   const next = {
-    entries: [...manifest.entries.filter((e) => e.date !== date), entry].sort((a, b) =>
-      a.date.localeCompare(b.date),
+    entries: [...manifest.entries, entry].sort((a, b) =>
+      (a.createdAt ?? a.date).localeCompare(b.createdAt ?? b.date),
     ),
   };
   await saveManifest(next);

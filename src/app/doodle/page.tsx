@@ -17,7 +17,9 @@ export default async function DoodleArchive() {
   let entries: Awaited<ReturnType<typeof loadManifest>>["manifest"]["entries"] = [];
   try {
     const { manifest } = await loadManifest();
-    entries = [...manifest.entries].sort((a, b) => b.date.localeCompare(a.date));
+    entries = [...manifest.entries].sort((a, b) =>
+      (b.createdAt ?? b.date).localeCompare(a.createdAt ?? a.date),
+    );
   } catch {
     entries = [];
   }
@@ -43,7 +45,7 @@ export default async function DoodleArchive() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2">
             {entries.map((entry) => (
-              <figure key={entry.date} className="flex flex-col">
+              <figure key={entry.id ?? entry.date} className="flex flex-col">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={entry.imageUrl}
