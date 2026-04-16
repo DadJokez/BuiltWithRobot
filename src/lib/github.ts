@@ -41,7 +41,7 @@ async function fetchReadme(repo: string): Promise<string | null> {
       `https://api.github.com/repos/${USERNAME}/${repo}/readme`,
       {
         headers: GH_HEADERS,
-        next: { revalidate: 86400 },
+        next: { revalidate: 3600 },
       },
     );
     if (!res.ok) return null;
@@ -97,7 +97,7 @@ export async function fetchGitHubProjects(): Promise<Project[]> {
       `https://api.github.com/search/repositories?q=user:${USERNAME}+topic:built-with-robot&sort=pushed&order=desc`,
       {
         headers: GH_HEADERS,
-        next: { revalidate: 86400 },
+        next: { revalidate: 3600 },
       },
     );
 
@@ -117,13 +117,12 @@ export async function fetchGitHubProjects(): Promise<Project[]> {
         const readme = await fetchReadme(repo.name);
         let description = repo.description ?? "";
 
-        if (readme) {
+        if (readme && readme.length >= 50) {
           try {
             description = await summarizeReadme(readme, repo.name);
           } catch (err) {
             console.warn(`[github] Haiku summarization failed for ${repo.name}:`, err);
-            // Fall back to the first 200 chars of plain-text README.
-            description = readme.slice(0, 200).replace(/\n/g, " ").trim();
+            description = repo.description ?? "";
           }
         }
 

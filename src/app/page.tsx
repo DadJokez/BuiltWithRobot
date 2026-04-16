@@ -3,9 +3,8 @@ import ProjectCard from "@/components/ProjectCard";
 import { fetchGitHubProjects } from "@/lib/github";
 import { projects as fallbackProjects } from "@/data/projects";
 
-// Revalidate the page every 24 hours so GitHub data stays fresh without
-// calling Haiku on every visitor request.
-export const revalidate = 86400;
+// Revalidate the page every hour so README updates surface quickly.
+export const revalidate = 3600;
 
 export default async function Home() {
   const githubProjects = await fetchGitHubProjects();
