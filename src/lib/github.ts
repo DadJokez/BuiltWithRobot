@@ -117,13 +117,13 @@ export async function fetchGitHubProjects(): Promise<Project[]> {
         const readme = await fetchReadme(repo.name);
         let description = repo.description ?? "";
 
-        if (readme) {
+        if (readme && readme.length >= 50) {
           try {
             description = await summarizeReadme(readme, repo.name);
           } catch (err) {
             console.warn(`[github] Haiku summarization failed for ${repo.name}:`, err);
-            // Fall back to the first 200 chars of plain-text README.
-            description = readme.slice(0, 200).replace(/\n/g, " ").trim();
+            // Fall back to repo description on Haiku error.
+            description = repo.description ?? "";
           }
         }
 
