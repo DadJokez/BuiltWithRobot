@@ -3,7 +3,11 @@ export interface Project {
   title: string;
   description: string;
   tags: string[];
+  /** Live site URL (homepage). Falls back to GitHub URL when no homepage is set. */
   url: string;
+  /** GitHub repository URL. Optional — not present on statically-defined projects. */
+  githubUrl?: string;
+  /** YYYY-MM of the last push / most recent activity. */
   date: string;
 }
 
