@@ -1,13 +1,22 @@
 import { Project } from "@/data/projects";
 
 export default function ProjectCard({ project }: { project: Project }) {
+  // If a separate homepage URL is set, surface both Live + Code. Otherwise the
+  // single URL is the GitHub repo and the secondary link would be redundant.
+  const hasDistinctLive =
+    Boolean(project.githubUrl) && project.url !== project.githubUrl;
+  const primaryHref = project.url;
+  const primaryLabel = hasDistinctLive ? "Live" : "Code";
+
   return (
-    <a
-      href={project.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06] hover:-translate-y-1"
-    >
+    <div className="group relative flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06] hover:-translate-y-1">
+      <a
+        href={primaryHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute inset-0 rounded-2xl"
+        aria-label={`${project.title} — ${primaryLabel.toLowerCase()}`}
+      />
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold text-white">{project.title}</h3>
         <svg
@@ -27,16 +36,41 @@ export default function ProjectCard({ project }: { project: Project }) {
       <p className="text-sm leading-relaxed text-white/50">
         {project.description}
       </p>
-      <div className="flex flex-wrap gap-2">
-        {project.tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-white/40"
+      {project.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {project.tags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-white/40"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+      {hasDistinctLive && (
+        <div className="relative z-10 mt-auto flex gap-3 pt-2 text-xs uppercase tracking-widest">
+          <a
+            href={project.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/50 transition hover:text-white"
           >
-            {tag}
+            Live ↗
+          </a>
+          <span aria-hidden="true" className="text-white/15">
+            ·
           </span>
-        ))}
-      </div>
-    </a>
+          <a
+            href={project.githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/50 transition hover:text-white"
+          >
+            Code ↗
+          </a>
+        </div>
+      )}
+    </div>
   );
 }

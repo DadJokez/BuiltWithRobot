@@ -38,7 +38,14 @@ export default async function DailyDoodle() {
         <div className="mt-3 text-center">
           <div className="text-sm font-medium text-white/80">{latest.title}</div>
           <div className="mt-1 text-xs uppercase tracking-widest text-white/30">
-            {formatDate(latest.date)}
+            {formatDate(latest.date)} · Daily doodle
+          </div>
+          <div className="mt-2 text-xs text-white/35 transition group-hover:text-white/55">
+            One human, one robot, one mundane task. A new one every day —{" "}
+            <span className="underline decoration-white/20 underline-offset-2">
+              browse the archive
+            </span>
+            .
           </div>
         </div>
       </div>

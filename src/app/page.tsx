@@ -1,14 +1,19 @@
 import DailyDoodle from "@/components/DailyDoodle";
 import ProjectCard from "@/components/ProjectCard";
+import SomedayCard from "@/components/SomedayCard";
 import { fetchGitHubProjects } from "@/lib/github";
 import { projects as fallbackProjects } from "@/data/projects";
+import { loadSomeday } from "@/lib/someday";
 
 // Revalidate the page every 24 hours so GitHub data stays fresh without
 // calling Haiku on every visitor request.
 export const revalidate = 86400;
 
 export default async function Home() {
-  const githubProjects = await fetchGitHubProjects();
+  const [githubProjects, someday] = await Promise.all([
+    fetchGitHubProjects(),
+    loadSomeday(),
+  ]);
   const projects = githubProjects.length > 0 ? githubProjects : fallbackProjects;
 
   return (
@@ -30,7 +35,7 @@ export default async function Home() {
         {/* Project Grid */}
         <section>
           <h2 className="mb-6 text-sm font-medium uppercase tracking-widest text-white/30">
-            Projects
+            Shipped
           </h2>
           {projects.length === 0 ? (
             <p className="text-sm text-white/30">
@@ -44,6 +49,25 @@ export default async function Home() {
             </div>
           )}
         </section>
+
+        {/* Someday — ideas not ready to build yet */}
+        {someday.length > 0 && (
+          <section className="mt-20">
+            <div className="mb-6 flex items-baseline justify-between gap-4">
+              <h2 className="text-sm font-medium uppercase tracking-widest text-white/30">
+                Someday
+              </h2>
+              <p className="text-xs text-white/30">
+                Ideas too good to forget, not ready to build.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {someday.map((project) => (
+                <SomedayCard key={project.id} project={project} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Footer */}

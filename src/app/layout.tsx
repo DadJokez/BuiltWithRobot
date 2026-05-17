@@ -12,10 +12,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DESCRIPTION =
+  "Things we build together — one human, one AI, shipped for real. Projects built through human-AI collaboration, plus a fresh retro-futurist doodle every day.";
+
 export const metadata: Metadata = {
-  title: "Built With Robot",
-  description:
-    "A portfolio of projects built through human-AI collaboration.",
+  title: {
+    default: "Built With Robot",
+    template: "%s · Built With Robot",
+  },
+  description: DESCRIPTION,
+  openGraph: {
+    title: "Built With Robot",
+    description: DESCRIPTION,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Built With Robot",
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({
