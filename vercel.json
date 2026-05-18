@@ -1,5 +1,6 @@
 {
   "crons": [
-    { "path": "/api/doodle/regen", "schedule": "0 12 * * *" }
+    { "path": "/api/doodle/regen", "schedule": "0 12 * * *" },
+    { "path": "/api/doodle/regen/fallback", "schedule": "0 20 * * *" }
   ]
 }
