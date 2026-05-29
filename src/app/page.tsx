@@ -1,16 +1,12 @@
 import DailyDoodle from "@/components/DailyDoodle";
 import ProjectCard from "@/components/ProjectCard";
-import { fetchGitHubProjects } from "@/lib/github";
-import { projects as fallbackProjects } from "@/data/projects";
+import { projects } from "@/data/projects";
 
 // Revalidate the page every 24 hours so GitHub data stays fresh without
 // calling Haiku on every visitor request.
 export const revalidate = 86400;
 
-export default async function Home() {
-  const githubProjects = await fetchGitHubProjects();
-  const projects = githubProjects.length > 0 ? githubProjects : fallbackProjects;
-
+export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-24 sm:px-8">
@@ -34,7 +30,7 @@ export default async function Home() {
           </h2>
           {projects.length === 0 ? (
             <p className="text-sm text-white/30">
-              No projects tagged yet — check back soon.
+              No projects yet — check back soon.
             </p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

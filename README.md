@@ -1,5 +1,24 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Adding Portfolio Tiles
+
+Add private, client, or manually curated projects in `src/data/projects.ts`.
+Each object in the `projects` array becomes one tile on the homepage:
+
+```ts
+{
+  id: "project-slug",
+  title: "Project Name",
+  description: "A short, polished description of what it does.",
+  tags: ["Next.js", "AI", "Dashboard"],
+  url: "https://example.com",
+  date: "2026-05",
+}
+```
+
+The homepage uses this curated list directly, so placeholder or private repos
+will not appear unless you add them here.
+
 ## Getting Started
 
 First, run the development server:
