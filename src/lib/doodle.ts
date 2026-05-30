@@ -78,13 +78,24 @@ function hasVercelRuntimeUrl(): boolean {
   );
 }
 
+function isVercelEnvironment(): boolean {
+  return process.env.VERCEL === "1" || hasVercelRuntimeUrl();
+}
+
 export async function loadManifest(
   timeoutMs = MANIFEST_TIMEOUT_MS,
   options: LoadManifestOptions = {},
 ): Promise<{ manifest: DoodleManifest; url: string | null }> {
   if (
     options.skipRemoteWhenLocal &&
-    !hasVercelRuntimeUrl() &&
+    process.env.BUILT_WITH_ROBOT_SKIP_REMOTE_BLOB === "1"
+  ) {
+    return { manifest: { entries: [] }, url: null };
+  }
+
+  if (
+    options.skipRemoteWhenLocal &&
+    !isVercelEnvironment() &&
     process.env.BUILT_WITH_ROBOT_LOAD_REMOTE_BLOB !== "1"
   ) {
     return { manifest: { entries: [] }, url: null };
