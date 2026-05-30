@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ScrollReveal from "@/components/ScrollReveal";
 import { loadManifest } from "@/lib/doodle";
 
 export const revalidate = 3600;
@@ -16,7 +17,7 @@ function formatDate(iso: string): string {
 export default async function DoodleArchive() {
   let entries: Awaited<ReturnType<typeof loadManifest>>["manifest"]["entries"] = [];
   try {
-    const { manifest } = await loadManifest();
+    const { manifest } = await loadManifest(2500, { skipRemoteWhenLocal: true });
     entries = [...manifest.entries].sort((a, b) =>
       (b.createdAt ?? b.date).localeCompare(a.createdAt ?? a.date),
     );
@@ -25,38 +26,36 @@ export default async function DoodleArchive() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-24 sm:px-8">
-        <div className="mb-12">
-          <Link
-            href="/"
-            className="mb-8 inline-block text-xs uppercase tracking-widest text-white/40 hover:text-white/70"
-          >
-            ← Back
-          </Link>
-          <h1 className="mb-3 text-4xl font-bold tracking-tight">Doodle Archive</h1>
-          <p className="max-w-lg text-lg text-white/50">
-            A daily retro-futurist illustration. One human, one robot, one mundane task.
+    <div className="site-shell">
+      <ScrollReveal />
+      <main className="archive-page">
+        <Link href="/" className="back-link" data-reveal>
+          <span aria-hidden="true">←</span>
+          <span>Back to portfolio</span>
+        </Link>
+
+        <header className="archive-hero" data-reveal>
+          <p className="eyebrow">Daily visual log</p>
+          <h1>Doodle Archive</h1>
+          <p>
+            Retro-futurist scenes from the studio: one human, one robot, and one
+            oddly formalized everyday task.
           </p>
-        </div>
+        </header>
 
         {entries.length === 0 ? (
-          <p className="text-white/40">No doodles yet. Check back tomorrow.</p>
+          <p className="archive-empty" data-reveal>
+            No doodles yet. Check back tomorrow.
+          </p>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="doodle-grid">
             {entries.map((entry) => (
-              <figure key={entry.id ?? entry.date} className="flex flex-col">
+              <figure key={entry.id ?? entry.date} className="doodle-card" data-reveal>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={entry.imageUrl}
-                  alt={entry.title}
-                  className="aspect-video w-full rounded-lg border border-white/[0.06] object-cover"
-                />
-                <figcaption className="mt-3">
-                  <div className="text-sm font-medium text-white/80">{entry.title}</div>
-                  <div className="mt-1 text-xs uppercase tracking-widest text-white/30">
-                    {formatDate(entry.date)}
-                  </div>
+                <img src={entry.imageUrl} alt={entry.title} />
+                <figcaption>
+                  <span>{entry.title}</span>
+                  <time dateTime={entry.date}>{formatDate(entry.date)}</time>
                 </figcaption>
               </figure>
             ))}

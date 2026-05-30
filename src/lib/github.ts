@@ -18,6 +18,15 @@ function formatTitle(name: string): string {
     .join(" ");
 }
 
+function artifactMark(name: string): string {
+  return name
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("")
+    .slice(0, 2);
+}
+
 /** Strip markdown syntax down to plain prose for LLM input. */
 function stripMarkdown(text: string): string {
   return text
@@ -132,6 +141,29 @@ export async function fetchGitHubProjects(): Promise<Project[]> {
           title: formatTitle(repo.name),
           description: description || "No description available.",
           tags: repo.topics.filter((t) => t !== "built-with-robot"),
+          kind: repo.homepage ? "live" : "repo",
+          statusLabel: repo.homepage ? "Live app" : "Source repo",
+          visual: {
+            type: "artifact",
+            accent: repo.homepage ? "teal" : "brass",
+            label: repo.homepage ? "Live project" : "Repository",
+            mark: artifactMark(repo.name) || "BW",
+            lines: [
+              formatTitle(repo.name),
+              repo.homepage ? "Public app destination" : "Source-first project",
+              repo.pushed_at.slice(0, 10),
+            ],
+          },
+          primaryAction: {
+            label: repo.homepage ? "Open site" : "Open repo",
+            href: repo.homepage || repo.html_url,
+          },
+          secondaryAction: repo.homepage
+            ? {
+                label: "View source",
+                href: repo.html_url,
+              }
+            : undefined,
           url: repo.homepage || repo.html_url,
           githubUrl: repo.html_url,
           date: repo.pushed_at.slice(0, 7), // YYYY-MM

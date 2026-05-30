@@ -1,42 +1,116 @@
+import Image from "next/image";
 import { Project } from "@/data/projects";
 
-export default function ProjectCard({ project }: { project: Project }) {
+function ExternalArrow() {
   return (
-    <a
-      href={project.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group relative flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.06] hover:-translate-y-1"
+    <svg
+      aria-hidden="true"
+      className="h-3.5 w-3.5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
     >
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-white">{project.title}</h3>
-        <svg
-          className="h-5 w-5 text-white/40 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white/70"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M7 17L17 7M17 7H7M17 7v10"
-          />
-        </svg>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17 17 7M17 7H8M17 7v9" />
+    </svg>
+  );
+}
+
+function ProjectVisual({
+  project,
+  featured,
+}: {
+  project: Project;
+  featured: boolean;
+}) {
+  if (project.visual.type === "screenshot") {
+    return (
+      <div className="project-media project-media-screenshot">
+        <Image
+          src={project.visual.src}
+          alt={project.visual.alt}
+          width={1440}
+          height={1000}
+          sizes={featured ? "(min-width: 1024px) 45vw, 100vw" : "(min-width: 1024px) 28vw, 100vw"}
+          className="h-full w-full object-cover object-top transition duration-700 group-hover:scale-[1.025]"
+          priority={featured}
+        />
       </div>
-      <p className="text-sm leading-relaxed text-white/50">
-        {project.description}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {project.tags.map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-white/40"
-          >
-            {tag}
+    );
+  }
+
+  return (
+    <div className="project-media project-artifact" data-accent={project.visual.accent}>
+      <div className="artifact-ruler">
+        <span>{project.visual.label}</span>
+        <span>{project.date}</span>
+      </div>
+      <div className="artifact-body">
+        <div className="artifact-mark">{project.visual.mark}</div>
+        <div className="artifact-lines" aria-hidden="true">
+          {project.visual.lines.map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ProjectCard({
+  project,
+  featured = false,
+}: {
+  project: Project;
+  featured?: boolean;
+}) {
+  return (
+    <article
+      className={featured ? "project-card group project-card-featured" : "project-card group"}
+      data-reveal
+    >
+      <ProjectVisual project={project} featured={featured} />
+
+      <div className="project-copy">
+        <div className="project-meta">
+          <span className="project-status" data-kind={project.kind}>
+            {project.statusLabel}
           </span>
-        ))}
+          <span>{project.date}</span>
+        </div>
+
+        <h3>{project.title}</h3>
+        <p>{project.description}</p>
+
+        <div className="project-tags" aria-label={`${project.title} technologies`}>
+          {project.tags.map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
+        </div>
+
+        <div className="project-actions">
+          <a
+            className="project-action project-action-primary"
+            href={project.primaryAction.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>{project.primaryAction.label}</span>
+            <ExternalArrow />
+          </a>
+          {project.secondaryAction ? (
+            <a
+              className="project-action"
+              href={project.secondaryAction.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span>{project.secondaryAction.label}</span>
+              <ExternalArrow />
+            </a>
+          ) : null}
+        </div>
       </div>
-    </a>
+    </article>
   );
 }
