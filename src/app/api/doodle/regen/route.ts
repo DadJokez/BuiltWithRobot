@@ -7,10 +7,13 @@ import {
   loadManifest,
   MONTH_THEMES,
   pickTitleStyle,
+  recentDoodleContext,
   saveManifest,
   titleStyleInstruction,
   todayKey,
   type DoodleEntry,
+  type DoodleManifest,
+  type DoodleScene,
 } from "@/lib/doodle";
 
 // Image generation can take 20-40s; raise timeout above the default.
@@ -55,31 +58,117 @@ function authorized(req: Request): boolean {
   return header === `Bearer ${secret}`;
 }
 
-async function pickActivity(ai: GoogleGenAI, month: number, date: string): Promise<string> {
+function normalizeScenePart(value: string, fallback: string): string {
+  const cleaned = value
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .replace(/\s+/g, " ");
+  return cleaned || fallback;
+}
+
+function normalizedKey(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function fallbackScene(month: number, recentEntries: DoodleEntry[]): DoodleScene {
   const theme = MONTH_THEMES[month];
-  const res = await withRetry("pickActivity", () =>
+  const recentActivities = new Set(
+    recentEntries.map((entry) => normalizedKey(entry.activity)),
+  );
+  const activity =
+    theme.examples.find((example) => !recentActivities.has(normalizedKey(example))) ??
+    theme.examples[Math.floor(Math.random() * theme.examples.length)];
+  const setting = theme.settings[Math.floor(Math.random() * theme.settings.length)];
+  const shuffledObjects = [...theme.objects].sort(() => Math.random() - 0.5);
+
+  return {
+    activity,
+    setting,
+    objects: shuffledObjects.slice(0, 4),
+  };
+}
+
+function parseSceneResponse(text: string, fallback: DoodleScene): DoodleScene {
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(match?.[0] ?? text) as Partial<DoodleScene>;
+    const objects = Array.isArray(parsed.objects)
+      ? parsed.objects
+          .filter((item): item is string => typeof item === "string")
+          .map((item) => normalizeScenePart(item, ""))
+          .filter(Boolean)
+          .slice(0, 5)
+      : fallback.objects;
+
+    return {
+      activity: normalizeScenePart(parsed.activity ?? "", fallback.activity).toLowerCase(),
+      setting: normalizeScenePart(parsed.setting ?? "", fallback.setting).toLowerCase(),
+      objects: objects.length > 0 ? objects : fallback.objects,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function formatRecentEntries(entries: DoodleEntry[]): string {
+  if (entries.length === 0) return "None yet.";
+  return entries
+    .map((entry) => {
+      const setting = entry.setting ? `; setting: ${entry.setting}` : "";
+      const objects =
+        entry.objects && entry.objects.length > 0
+          ? `; objects: ${entry.objects.join(", ")}`
+          : "";
+      return `- ${entry.date}: ${entry.title}; activity: ${entry.activity}${setting}${objects}`;
+    })
+    .join("\n");
+}
+
+function repeatsRecentActivity(scene: DoodleScene, recentEntries: DoodleEntry[]): boolean {
+  const activityKey = normalizedKey(scene.activity);
+  return recentEntries.some((entry) => normalizedKey(entry.activity) === activityKey);
+}
+
+async function pickScene(
+  ai: GoogleGenAI,
+  month: number,
+  date: string,
+  manifest: DoodleManifest,
+): Promise<DoodleScene> {
+  const theme = MONTH_THEMES[month];
+  const recentEntries = recentDoodleContext(manifest);
+  const fallback = fallbackScene(month, recentEntries);
+  const res = await withRetry("pickScene", () =>
     ai.models.generateContent({
       model: TEXT_MODEL,
-      contents: `You are picking a subject for today's daily illustration (date: ${date}).
+      contents: `You are picking a scene for today's daily illustration (date: ${date}).
 The month's vibe is: ${theme.vibe}.
 Some example activities in this vibe: ${theme.examples.join(", ")}.
+Useful settings in this vibe: ${theme.settings.join(", ")}.
+Useful objects in this vibe: ${theme.objects.join(", ")}.
 
-Pick ONE activity — it should be a gerund phrase like the examples ("planting seedlings", "flying a kite"). It can be one of the examples or a fresh variation in the same vibe. It must be something a friendly chrome robot and a human could plausibly do together in a 1950s retro-futurist illustration. Return only the gerund phrase, no punctuation, no quotes.`,
+Recent manifest entries to avoid repeating:
+${formatRecentEntries(recentEntries)}
+
+Pick one fresh scene. The activity must be a gerund phrase like "calibrating a miniature sunrise machine" or "cataloging tiny weather jars". Avoid recent activities, titles, settings, and obvious subject repeats from the manifest above. Prefer a surprising but plausible human-and-robot collaboration that still fits the month. Use a setting and 3-5 concrete objects that create visual variety.
+
+Return only minified JSON in this shape:
+{"activity":"gerund phrase","setting":"specific place","objects":["object one","object two","object three"]}`,
     }),
   );
-  const text = res.text?.trim() ?? theme.examples[0];
-  return text.replace(/^["']|["']$/g, "").toLowerCase();
+  const scene = parseSceneResponse(res.text?.trim() ?? "", fallback);
+  return repeatsRecentActivity(scene, recentEntries) ? fallback : scene;
 }
 
 async function generateTitle(
   ai: GoogleGenAI,
-  activity: string,
+  scene: DoodleScene,
   style: "plaque" | "textbook",
 ): Promise<string> {
   const res = await withRetry("generateTitle", () =>
     ai.models.generateContent({
       model: TEXT_MODEL,
-      contents: `Scene: a friendly chrome robot and a human ${activity} together in a 1950s retro-futurist style.
+      contents: `Scene: a friendly chrome robot and a human ${scene.activity} together in ${scene.setting}, surrounded by ${scene.objects.join(", ")}. The style is optimistic 1950s World's Fair futurism with a dark workshop exhibit palette.
 
 ${titleStyleInstruction(style)}`,
     }),
@@ -125,11 +214,11 @@ async function run(req: Request, opts: { force?: boolean; monthOverride?: number
   const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
   const month = opts.monthOverride ?? new Date(`${date}T00:00:00Z`).getUTCMonth() + 1;
 
-  const activity = await pickActivity(ai, month, date);
+  const scene = await pickScene(ai, month, date, manifest);
   const titleStyle = pickTitleStyle(date);
   const [title, imageBytes] = await Promise.all([
-    generateTitle(ai, activity, titleStyle),
-    generateImage(ai, buildImagePrompt(activity)),
+    generateTitle(ai, scene, titleStyle),
+    generateImage(ai, buildImagePrompt(scene)),
   ]);
 
   // addRandomSuffix keeps each regen on a unique URL so CDN caches can't
@@ -146,7 +235,9 @@ async function run(req: Request, opts: { force?: boolean; monthOverride?: number
     date,
     createdAt,
     title,
-    activity,
+    activity: scene.activity,
+    setting: scene.setting,
+    objects: scene.objects,
     imageUrl: url,
     titleStyle,
   };
