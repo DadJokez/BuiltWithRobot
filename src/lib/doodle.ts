@@ -179,8 +179,12 @@ export async function loadManifest(
   });
   const existing = blobs.find((b) => b.pathname === MANIFEST_PATH);
   if (!existing) return { manifest: { entries: [] }, url: null };
-  const res = await fetch(existing.url, {
+
+  const manifestUrl = new URL(existing.url);
+  manifestUrl.searchParams.set("read", Date.now().toString());
+  const res = await fetch(manifestUrl, {
     cache: "no-store",
+    headers: { "cache-control": "no-cache" },
     signal: timeoutSignal(timeoutMs),
   });
   if (!res.ok) return { manifest: { entries: [] }, url: existing.url };
