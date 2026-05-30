@@ -11,6 +11,17 @@ Each object in the `projects` array becomes one tile on the homepage:
   title: "Project Name",
   description: "A short, polished description of what it does.",
   tags: ["Next.js", "AI", "Dashboard"],
+  kind: "live",
+  statusLabel: "Live app",
+  visual: {
+    type: "screenshot",
+    src: "/projects/project-slug.png",
+    alt: "Project Name homepage screenshot",
+  },
+  primaryAction: {
+    label: "Open site",
+    href: "https://example.com",
+  },
   url: "https://example.com",
   date: "2026-05",
 }
@@ -18,6 +29,10 @@ Each object in the `projects` array becomes one tile on the homepage:
 
 The homepage uses this curated list directly, so placeholder or private repos
 will not appear unless you add them here.
+
+Use `kind: "repo"` or `kind: "private"` with an `artifact` visual when a
+project should link to source code, a write-up, or a login-gated app instead of
+a public live screenshot.
 
 ## Getting Started
 

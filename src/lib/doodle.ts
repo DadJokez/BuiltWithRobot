@@ -16,7 +16,12 @@ export type DoodleManifest = {
   entries: DoodleEntry[];
 };
 
+type LoadManifestOptions = {
+  skipRemoteWhenLocal?: boolean;
+};
+
 const MANIFEST_PATH = "doodle/manifest.json";
+const MANIFEST_TIMEOUT_MS = 5000;
 
 // Month-themed activity pools. The LLM picks one each day (with its own
 // variation) so we get fresh-but-on-brand prompts.
@@ -58,11 +63,43 @@ export function todayKey(now = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
-export async function loadManifest(): Promise<{ manifest: DoodleManifest; url: string | null }> {
-  const { blobs } = await list({ prefix: "doodle/manifest" });
+function timeoutSignal(timeoutMs: number): AbortSignal | undefined {
+  if (typeof AbortSignal === "undefined" || !("timeout" in AbortSignal)) {
+    return undefined;
+  }
+  return AbortSignal.timeout(timeoutMs);
+}
+
+function hasVercelRuntimeUrl(): boolean {
+  return Boolean(
+    process.env.VERCEL_URL ||
+      process.env.VERCEL_BRANCH_URL ||
+      process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  );
+}
+
+export async function loadManifest(
+  timeoutMs = MANIFEST_TIMEOUT_MS,
+  options: LoadManifestOptions = {},
+): Promise<{ manifest: DoodleManifest; url: string | null }> {
+  if (
+    options.skipRemoteWhenLocal &&
+    !hasVercelRuntimeUrl() &&
+    process.env.BUILT_WITH_ROBOT_LOAD_REMOTE_BLOB !== "1"
+  ) {
+    return { manifest: { entries: [] }, url: null };
+  }
+
+  const { blobs } = await list({
+    prefix: "doodle/manifest",
+    abortSignal: timeoutSignal(timeoutMs),
+  });
   const existing = blobs.find((b) => b.pathname === MANIFEST_PATH);
   if (!existing) return { manifest: { entries: [] }, url: null };
-  const res = await fetch(existing.url, { cache: "no-store" });
+  const res = await fetch(existing.url, {
+    cache: "no-store",
+    signal: timeoutSignal(timeoutMs),
+  });
   if (!res.ok) return { manifest: { entries: [] }, url: existing.url };
   const manifest = (await res.json()) as DoodleManifest;
   return { manifest, url: existing.url };

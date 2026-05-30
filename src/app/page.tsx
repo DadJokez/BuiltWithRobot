@@ -1,50 +1,126 @@
-import DailyDoodle from "@/components/DailyDoodle";
+import Link from "next/link";
 import ProjectCard from "@/components/ProjectCard";
+import ScrollReveal from "@/components/ScrollReveal";
 import { projects } from "@/data/projects";
+import { loadManifest, type DoodleEntry } from "@/lib/doodle";
 
 // Revalidate the page every 24 hours so GitHub data stays fresh without
 // calling Haiku on every visitor request.
 export const revalidate = 86400;
 
-export default function Home() {
+async function getLatestDoodle(): Promise<DoodleEntry | null> {
+  try {
+    const { manifest } = await loadManifest(2500, { skipRemoteWhenLocal: true });
+    return manifest.entries.at(-1) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  return d.toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export default async function Home() {
+  const latestDoodle = await getLatestDoodle();
+  const featuredProjects = projects.filter((project) => project.visual.type === "screenshot");
+  const featuredIds = new Set(featuredProjects.map((project) => project.id));
+  const supportingProjects = projects.filter((project) => !featuredIds.has(project.id));
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-24 sm:px-8">
-        {/* Daily Doodle */}
-        <DailyDoodle />
-
-        {/* Hero */}
-        <div className="mb-20">
-          <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-            Built With Robot
-          </h1>
-          <p className="max-w-lg text-lg text-white/50">
-            Things we build together — one human, one AI, shipped for real.
-          </p>
-        </div>
-
-        {/* Project Grid */}
-        <section>
-          <h2 className="mb-6 text-sm font-medium uppercase tracking-widest text-white/30">
-            Projects
-          </h2>
-          {projects.length === 0 ? (
-            <p className="text-sm text-white/30">
-              No projects yet — check back soon.
+    <div className="site-shell">
+      <ScrollReveal />
+      <main>
+        <section className="hero-section">
+          <div className="hero-copy" data-reveal>
+            <p className="eyebrow">Personal studio / AI-built experiments</p>
+            <h1>Built With Robot</h1>
+            <p className="hero-lede">
+              A portfolio of shipped experiments, strange utilities, and serious work systems
+              built through human taste and machine leverage.
             </p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
+
+            <div className="hero-actions">
+              <a className="studio-button studio-button-primary" href="#projects">
+                Browse projects
+              </a>
+              <Link className="studio-button" href="/doodle">
+                Doodle archive
+              </Link>
             </div>
-          )}
+
+            <dl className="studio-stats" aria-label="Portfolio highlights">
+              <div>
+                <dt>{projects.length}</dt>
+                <dd>portfolio pieces</dd>
+              </div>
+              <div>
+                <dt>daily</dt>
+                <dd>visual log</dd>
+              </div>
+              <div>
+                <dt>2026</dt>
+                <dd>latest build season</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="doodle-hero" data-reveal>
+            <div className="doodle-label">
+              <span>Today&apos;s studio artifact</span>
+              {latestDoodle ? <span>{formatDate(latestDoodle.date)}</span> : null}
+            </div>
+
+            {latestDoodle ? (
+              <Link
+                href="/doodle"
+                className="doodle-frame"
+                aria-label={`Daily doodle: ${latestDoodle.title}. View archive.`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={latestDoodle.imageUrl} alt={latestDoodle.title} />
+                <span className="doodle-title">{latestDoodle.title}</span>
+              </Link>
+            ) : (
+              <Link href="/doodle" className="doodle-frame doodle-frame-empty">
+                <span className="doodle-title">Daily doodle warming up</span>
+              </Link>
+            )}
+          </div>
+        </section>
+
+        <section id="projects" className="projects-section" aria-labelledby="projects-title">
+          <div className="section-heading" data-reveal>
+            <p className="eyebrow">Project exhibit</p>
+            <h2 id="projects-title">Useful things, odd things, shipped things.</h2>
+            <p>
+              Public apps get real captured surfaces. Repos and private work are treated as
+              project artifacts, so each link says what it actually is.
+            </p>
+          </div>
+
+          <div className="featured-grid">
+            {featuredProjects.map((project) => (
+              <ProjectCard key={project.id} project={project} featured />
+            ))}
+          </div>
+
+          <div className="cabinet-grid">
+            {supportingProjects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 py-8 text-center text-xs text-white/25">
-        Built with curiosity and collaboration.
+      <footer className="studio-footer">
+        <span>Built with curiosity, collaboration, and a little useful friction.</span>
       </footer>
     </div>
   );
