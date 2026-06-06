@@ -43,27 +43,32 @@ export const projects: Project[] = [
     id: "jermes",
     title: "Jermes",
     description:
-      "A personal fork of Hermes Agent shaped around a custom agent identity, local workflows, skills, and product direction. It keeps close to upstream while carving out a place for a more opinionated AI operating environment.",
-    tags: ["Agent", "CLI", "Skills"],
-    kind: "repo",
-    statusLabel: "Source repo",
+      "An enterprise lab for turning Jermes into the governed agent runtime behind an AI app shell, with specs, approval docs, adapters, and AWS pilot scaffolding.",
+    tags: ["Agent", "Enterprise", "AWS"],
+    kind: "private",
+    statusLabel: "Private repo",
     visual: {
       type: "artifact",
       accent: "brass",
-      label: "Agent fork",
+      label: "Enterprise lab",
       mark: "J",
-      lines: ["Local agent identity", "Custom skills and workflows", "Upstream-aware direction"],
+      lines: ["Governed agent runtime", "Approval proof", "AWS pilot scaffold"],
     },
     primaryAction: {
-      label: "Open repo",
+      label: "Open lab repo",
+      href: "https://github.com/DadJokez/jermes-enterprise-lab",
+    },
+    secondaryAction: {
+      label: "Upstream Hermes",
       href: "https://github.com/NousResearch/hermes-agent",
     },
-    url: "https://github.com/NousResearch/hermes-agent",
+    url: "https://github.com/DadJokez/jermes-enterprise-lab",
+    githubUrl: "https://github.com/DadJokez/jermes-enterprise-lab",
     date: "2026-05",
   },
   {
     id: "AI-workspace",
-    title: "AI Workspace",
+    title: "AI Hub",
     description:
       "An internal AI front door for enterprise work: one login, chat with work data, scheduled agents, shared workflows, GitHub MCP integration, and a Cursor or Bedrock-backed runtime.",
     tags: ["Next.js", "Agents", "Enterprise"],
@@ -113,8 +118,8 @@ export const projects: Project[] = [
     description:
       "A voice-first intake app where someone talks through a project idea with an AI interviewer, then gets a structured brief with the audio, transcript, and next-step summary saved to a dashboard.",
     tags: ["Next.js", "Voice AI", "Briefs"],
-    kind: "private",
-    statusLabel: "Repo available",
+    kind: "live",
+    statusLabel: "Live app",
     visual: {
       type: "artifact",
       accent: "brass",
@@ -123,12 +128,16 @@ export const projects: Project[] = [
       lines: ["Interview flow", "Transcript and audio", "Structured project brief"],
     },
     primaryAction: {
+      label: "Open app",
+      href: "https://talk-ai-to-me.vercel.app",
+    },
+    secondaryAction: {
       label: "View source",
       href: "https://github.com/DadJokez/ai-intake",
     },
-    url: "https://github.com/DadJokez/ai-intake",
+    url: "https://talk-ai-to-me.vercel.app",
     githubUrl: "https://github.com/DadJokez/ai-intake",
-    date: "2026-04",
+    date: "2026-05",
   },
   {
     id: "sort-of-history",
@@ -172,7 +181,12 @@ export const projects: Project[] = [
       label: "Open site",
       href: "https://hello-kappa-khaki.vercel.app/",
     },
+    secondaryAction: {
+      label: "View source",
+      href: "https://github.com/DadJokez/hello",
+    },
     url: "https://hello-kappa-khaki.vercel.app/",
+    githubUrl: "https://github.com/DadJokez/hello",
     date: "2026-04",
   },
   {
@@ -194,7 +208,12 @@ export const projects: Project[] = [
       label: "Open app",
       href: "https://vendor-spend-management.vercel.app/",
     },
+    secondaryAction: {
+      label: "View source",
+      href: "https://github.com/DadJokez/vendor-spend-management",
+    },
     url: "https://vendor-spend-management.vercel.app/",
+    githubUrl: "https://github.com/DadJokez/vendor-spend-management",
     date: "2026-04",
   },
 ];
