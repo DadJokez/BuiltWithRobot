@@ -72,22 +72,26 @@ export const projects: Project[] = [
     description:
       "An internal AI front door for enterprise work: one login, chat with work data, scheduled agents, shared workflows, GitHub MCP integration, and a Cursor or Bedrock-backed runtime.",
     tags: ["Next.js", "Agents", "Enterprise"],
-    kind: "repo",
-    statusLabel: "Source repo",
+    kind: "private",
+    statusLabel: "Login required",
     visual: {
       type: "artifact",
       accent: "teal",
-      label: "Workspace system",
+      label: "AI hub chat",
       mark: "AI",
       lines: ["Unified work chat", "Scheduled agents", "Enterprise data surface"],
     },
     primaryAction: {
+      label: "Open chat",
+      href: "https://ai-workspace.builtwithrobot.link/chat",
+    },
+    secondaryAction: {
       label: "View source",
       href: "https://github.com/DadJokez/AI-workspace",
     },
-    url: "https://github.com/DadJokez/AI-workspace",
+    url: "https://ai-workspace.builtwithrobot.link/chat",
     githubUrl: "https://github.com/DadJokez/AI-workspace",
-    date: "2026-05",
+    date: "2026-06",
   },
   {
     id: "llm-council",
